@@ -7,10 +7,12 @@
 
 # testing
 /coverage
+training/PlantVillage/
 
 # production
 /build
-
+.env
+.jpg
 # misc
 .DS_Store
 .env.local
@@ -21,3 +23,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+# PyCharm / IntelliJ
+.idea/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/

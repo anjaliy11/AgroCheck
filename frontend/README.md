@@ -1,70 +1,206 @@
-# Getting Started with Create React App
+# AgroCheck
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+AgroCheck is an **end-to-end crop disease detection system** built with a modern ML & full-stack pipeline:  
+- **Data preprocessing** & cleaning  
+- **CNN model training (TensorFlow/Keras)**  
+- **Model serving (TensorFlow Serving)**  
+- **Inference API (FastAPI)**  
+- **User-facing frontend (React.js)**  
+- **Cloud deployment (Google Cloud Run + Artifact Registry + Cloud Storage)**  
 
-## Available Scripts
+> The goal is to provide **fast, reliable plant disease predictions** from leaf images with production-grade MLOps.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## 🚀 Architecture
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```mermaid
+flowchart LR
+    A[Raw Data (PlantVillage, etc.)] --> B[Data Cleaning & Preprocessing]
+    B --> C[CNN Model Training (TensorFlow/Keras)]
+    C --> D[Export SavedModel / .keras]
+    D --> E[TensorFlow Serving (Docker/Cloud Run)]
+    E --> F[FastAPI Backend]
+    F --> G[React.js Frontend]
+    G --> H[GCP Deployment]
+📂 Repository Structure
+graphql
+Copy
+Edit
+AgroCheck/
+├─ api/                 # FastAPI app: inference endpoints & schemas
+├─ frontend/            # React web app (upload + results UI)
+├─ gcp/                 # GCP deployment scripts/configs
+├─ models/              # Exported TF SavedModels / versioned dirs
+├─ training/            # Data preprocessing & model training scripts
+├─ main.py              # Entrypoint / helper for local API
+├─ models.config        # TensorFlow Serving multi-model config
+├─ requirements.txt     # Python dependencies
+└─ README.md
+🧹 Data & Preprocessing
+Input: PlantVillage leaf images
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Steps:
 
-### `npm test`
+Deduplicate & clean images
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Resize/crop to 224×224
 
-### `npm run build`
+Normalize pixels (0–1)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Data augmentation: rotations, flips, shifts
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Train/val/test split
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Example:
 
-### `npm run eject`
+python
+Copy
+Edit
+datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+  rescale=1./255,
+  validation_split=0.2,
+  rotation_range=15,
+  width_shift_range=0.1,
+  height_shift_range=0.1,
+  horizontal_flip=True
+)
+🧠 Model (CNN)
+Backbone: MobileNetV2 / EfficientNet (transfer learning)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Loss: categorical cross-entropy
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Metrics: accuracy, F1-score
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Export for serving:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+markdown
+Copy
+Edit
+models/
+  plantdisease/
+    1/
+      saved_model.pb
+      variables/
+📦 TensorFlow Serving
+models.config example:
 
-## Learn More
+text
+Copy
+Edit
+model_config_list: {
+  config: {
+    name: 'plantdisease',
+    base_path: '/models/plantdisease',
+    model_platform: 'tensorflow'
+  }
+}
+Run locally:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+bash
+Copy
+Edit
+docker run --rm -p 8501:8501 \
+  -v $(pwd)/models/plantdisease:/models/plantdisease \
+  -v $(pwd)/models.config:/models/models.config \
+  -e MODEL_CONFIG_FILE=/models/models.config \
+  tensorflow/serving
+⚡ FastAPI Backend
+Responsibilities:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Accept image upload
 
-### Code Splitting
+Preprocess to tensor
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Call TF Serving REST/gRPC
 
-### Analyzing the Bundle Size
+Return prediction JSON
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Run locally:
 
-### Making a Progressive Web App
+bash
+Copy
+Edit
+pip install -r requirements.txt
+export TF_SERVING_URL=http://localhost:8501
+uvicorn api.app:app --reload --port 8000
+Response:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+json
+Copy
+Edit
+{
+  "prediction": "Late_Blight",
+  "confidence": 0.93,
+  "top_k": [
+    {"label": "Late_Blight", "prob": 0.93},
+    {"label": "Early_Blight", "prob": 0.05},
+    {"label": "Healthy", "prob": 0.02}
+  ]
+}
+💻 React Frontend
+Upload & preview images
 
-### Advanced Configuration
+Display prediction + confidence
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Simple UI for farmers & experts
 
-### Deployment
+Run locally:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+bash
+Copy
+Edit
+cd frontend
+npm install
+npm run dev
+🌐 Deployment on Google Cloud
+1. Build & Push Images
+bash
+Copy
+Edit
+gcloud auth login
+gcloud config set project <PROJECT_ID>
 
-### `npm run build` fails to minify
+# FastAPI API
+gcloud builds submit --tag \
+  us-central1-docker.pkg.dev/<PROJECT_ID>/agrocheck/fastapi:latest .
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# TensorFlow Serving
+gcloud builds submit --tag \
+  us-central1-docker.pkg.dev/<PROJECT_ID>/agrocheck/tfserving:latest serving/
+2. Deploy to Cloud Run
+bash
+Copy
+Edit
+gcloud run deploy agrocheck-api \
+  --image us-central1-docker.pkg.dev/<PROJECT_ID>/agrocheck/fastapi:latest \
+  --platform managed --region us-central1 --allow-unauthenticated \
+  --set-env-vars TF_SERVING_URL=<TF_SERVING_URL>,MODEL_NAME=plantdisease
+Frontend can be deployed via Firebase Hosting or Cloud Storage + CDN.
+
+🔑 Environment Variables
+Backend:
+
+TF_SERVING_URL – URL of TensorFlow Serving
+
+MODEL_NAME – e.g., plantdisease
+
+TOP_K – top predictions to return
+
+Frontend:
+
+VITE_API_URL – Base URL for FastAPI
+
+✅ API Reference
+GET /healthz → Health check
+
+POST /predict → Image upload, returns predictions
+
+🛠 Roadmap
+ Add evaluation metrics & confusion matrix
+
+ CI/CD with GitHub Actions
+
+ Canary deployment for model versions
+
+ Grad-CAM explanations in frontend
