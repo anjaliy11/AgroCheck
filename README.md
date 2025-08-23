@@ -89,6 +89,13 @@ Test Accuracy: ~94%
 
 ✅ Optimize for edge devices (TensorFlow Lite)
 
+ ## 🤝 Contributing
 
+Contributions are welcome! Please fork this repo and submit a pull request.
+
+## 📧 Contact
+
+Author: Anjali Yadav
+🔗 GitHub: @anjaliy11
 
 
