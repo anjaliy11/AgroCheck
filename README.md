@@ -34,19 +34,17 @@ This project aims to assist **farmers and agricultural experts** in **early dete
 ---
 ## 📂 Repository Structure
 AgroCheck/
-│── data/ # Dataset folder (not included due to size)
-│── models/ # Saved trained models
-│── notebooks/ # Jupyter notebooks for experimentation
-│── src/ # Source code
+│── data/      # Dataset folder (not included due to size)
+│── models/      # Saved trained models
+│── notebooks/       # Jupyter notebooks for experimentation
+│── src/          # Source code
 │ ├── data_preprocessing.py
 │ ├── model_training.py
 │ ├── evaluate.py
-│── README.md # Project documentation
-│── requirements.txt # Dependencies
+│── README.md         # Project documentation
+│── requirements.txt     # Dependencies
 
 yaml
-Copy
-Edit
 
 ---
 
@@ -93,4 +91,4 @@ Test Accuracy: ~94%
 
 
 
-## 📂 Repository Structure
+
